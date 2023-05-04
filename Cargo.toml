@@ -1,7 +1,15 @@
 [package]
-name = "rust_crates"
-version = "0.1.1"
+name = "cargo-crates"
+version = "0.2.0"
 edition = "2021"
+authors = ["bejker123 <1piotrkucharski@gmail.com>"]
+license = "MIT"
+description = "A tool to easily list installed cargo packages an their descriptions!"
+readme = "README.md"
+homepage = "https://github.com/bejker123/cargo-crates"
+repository= "https://github.com/bejker123/cargo-crates"
+keywords = ["cli", "cargo","crates"]
+categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 #for using cargo flamegraph (https://github.com/flamegraph-rs/flamegraph)
