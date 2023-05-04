@@ -145,6 +145,23 @@ struct Options {
     print_descs: bool,
 }
 
+fn print_help() -> ! {
+    println!("Usage:");
+    let options = "OPTIONS".yellow().bold();
+    let call = format!("{} {}", "cargo".red(), "ls-crates".blue().bold());
+    println!("{call} [{options}]");
+    println!("{options}:");
+    println!("\t-h print help");
+    println!("\t-v print versions");
+    println!("\t-d print descriptions");
+    println!("{}:", "Examples".purple());
+    println!("{call} -v - print package names and versions");
+    println!("{call} -d - print package names and descriptions");
+    println!("{call} -vd - print package names, descriptions and versions");
+    println!("{call} -dv - print package names, descriptions and versions");
+    std::process::exit(0)
+}
+
 fn parse_args() -> Options {
     let args: Vec<String> = env::args().collect();
     let mut op = Options {
@@ -152,7 +169,9 @@ fn parse_args() -> Options {
         print_versions: false,
     };
     for arg in args.iter() {
-        if arg == "-v" {
+        if arg == "-h" || arg == "--help" {
+            print_help();
+        } else if arg == "-v" {
             op.print_versions = true;
         } else if arg == "-d" {
             op.print_descs = true;
