@@ -13,8 +13,6 @@
 use colored::Colorize;
 use std::{collections::HashMap, env, fs, io::Read};
 
-use clap::{command, Arg, ArgAction};
-
 fn determine_pkgs_install_dir() -> Option<String> {
     //According to cargo documentation it's best to start looking for the Install Root Directory in
     //this order:
@@ -142,25 +140,35 @@ fn get_pkg_info(pkg: &String, map: &HashMap<String, (String, String)>) -> Option
     map.get(pkg).cloned()
 }
 
+struct Options {
+    print_versions: bool,
+    print_descs: bool,
+}
+
+fn parse_args() -> Options {
+    let args: Vec<String> = env::args().collect();
+    let mut op = Options {
+        print_descs: false,
+        print_versions: false,
+    };
+    for arg in args.iter() {
+        if arg == "-v" {
+            op.print_versions = true;
+        } else if arg == "-d" {
+            op.print_descs = true;
+        } else if arg == "-vd" || arg == "-dv" {
+            op.print_descs = true;
+            op.print_versions = true;
+        }
+    }
+    op
+}
+
 fn main() {
     //Parse arguments
-    let ms = command!()
-        .arg(
-            Arg::new("versions")
-                .short('v')
-                .long("versions")
-                .action(ArgAction::SetTrue),
-        )
-        .arg(
-            Arg::new("descriptions")
-                .short('d')
-                .long("descriptions")
-                .action(ArgAction::SetTrue),
-        )
-        .get_matches();
-
-    let print_versions = ms.get_flag("versions");
-    let print_descs = ms.get_flag("descriptions");
+    let op = parse_args();
+    let print_versions = op.print_versions;
+    let print_descs = op.print_descs;
 
     //Locate where packages are installed
     let Some(install_root) = determine_pkgs_install_dir() else{
