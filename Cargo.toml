@@ -1,11 +1,11 @@
 [package]
 name = "cargo-crates"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 authors = ["bejker123 <1piotrkucharski@gmail.com>"]
 license = "MIT"
 description = "A tool to easily list installed cargo packages an their descriptions!"
-readme = "README.md"
+readme = "README.MD"
 homepage = "https://github.com/bejker123/cargo-crates"
 repository= "https://github.com/bejker123/cargo-crates"
 keywords = ["cli", "cargo","crates"]
