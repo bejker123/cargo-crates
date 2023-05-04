@@ -151,7 +151,7 @@ fn print_help() -> ! {
     let call = format!("{} {}", "cargo".red(), "ls-crates".blue().bold());
     println!("{call} [{options}]");
     println!("{options}:");
-    println!("\t-h print help");
+    println!("\t-h --help print help");
     println!("\t-v print versions");
     println!("\t-d print descriptions");
     println!("{}:", "Examples".purple());
@@ -159,6 +159,7 @@ fn print_help() -> ! {
     println!("{call} -d - print package names and descriptions");
     println!("{call} -vd - print package names, descriptions and versions");
     println!("{call} -dv - print package names, descriptions and versions");
+    println!("Note:\nInvalid arguments will be ignored.");
     std::process::exit(0)
 }
 
