@@ -13,26 +13,25 @@
 use colored::Colorize;
 use std::{collections::HashMap, env, fs, io::Read};
 
-fn determine_pkgs_install_dir() -> Option<String> {
+fn determine_pkgs_install_dir() -> Vec<String> {
     //According to cargo documentation it's best to start looking for the Install Root Directory in
     //this order:
-    let dirs = vec![env::var("CARGO_INSTALL_ROOT"), env::var("CARGO_HOME")];
-    //If a dir is found return it
-    for dir in dirs.into_iter().flatten() {
-        if fs::read_dir(&dir).is_ok() {
-            return Some(dir);
-        }
-    }
-
-    //If no valid dirs were found try $HOME/.cargo
-    let home_cargo = env::var("HOME").ok()? + "/.cargo";
-
-    //Finally if this can't be found return None
-    if fs::read_dir(&home_cargo).is_ok() {
-        Some(home_cargo)
-    } else {
-        None
-    }
+    let mut dirs = vec![
+        env::var("CARGO_INSTALL_ROOT"),
+        env::var("CARGO_HOME"),
+        env::var("HOME").map(|x| x + "/.cargo"),
+    ];
+    dirs.dedup();
+    dirs.iter()
+        .flatten()
+        .filter_map(|x| {
+            if fs::read_dir(x).is_ok() {
+                Some(x.clone())
+            } else {
+                None
+            }
+        })
+        .collect()
 }
 
 fn list_pkgs(ir: &str) -> Option<Vec<String>> {
@@ -57,6 +56,7 @@ fn list_pkgs(ir: &str) -> Option<Vec<String>> {
     }
 }
 
+//Get information (version and description) about installed cargo packages.
 fn get_pkgs_info(ir: &str) -> Option<HashMap<String, (String, String)>> {
     //Install Root Source Directory.
     let ir_source = ir.to_owned() + "/registry/src";
@@ -136,10 +136,6 @@ fn get_pkgs_info(ir: &str) -> Option<HashMap<String, (String, String)>> {
     }
 }
 
-fn get_pkg_info(pkg: &String, map: &HashMap<String, (String, String)>) -> Option<(String, String)> {
-    map.get(pkg).cloned()
-}
-
 struct Options {
     print_versions: bool,
     print_descs: bool,
@@ -169,7 +165,7 @@ fn parse_args() -> Options {
         print_descs: false,
         print_versions: false,
     };
-    for arg in args.iter() {
+    for arg in &args {
         if arg == "-h" || arg == "--help" {
             print_help();
         } else if arg == "-v" {
@@ -185,34 +181,44 @@ fn parse_args() -> Options {
 }
 
 fn main() {
-    //Parse arguments
-    let op = parse_args();
-    let print_versions = op.print_versions;
-    let print_descs = op.print_descs;
+    //Parse command line arguments
+    let options = parse_args();
+    let print_versions = options.print_versions;
+    let print_descs = options.print_descs;
 
-    //Locate where packages are installed
-    let Some(install_root) = determine_pkgs_install_dir() else{
-          println!("Failed to locate cargo root.");
-          std::process::exit(1);
+    //Locate packages
+    let install_dirs = determine_pkgs_install_dir();
+    if install_dirs.is_empty() {
+        panic!("Failed to locate cargo root.");
     };
 
-    //Get the list of installed packages
-    let Some(pkgs) = list_pkgs(&install_root) else{
+    let mut pkgs: Vec<String> = Vec::new();
+    let mut map: HashMap<String, (String, String)> = HashMap::new();
+    for dir in install_dirs {
+        //Get the list of installed packages
+        if let Some(mut pkgs_) = list_pkgs(&dir) {
+            pkgs.append(&mut pkgs_);
+        };
+        //Get packages' descriptions and versions
+        if let Some(map_) = get_pkgs_info(&dir) {
+            map.extend(map_);
+        };
+    }
+
+    if pkgs.is_empty() {
         panic!("Failed to list packages.");
-    };
-
-    //Get packages' descriptions and versions
-    let Some(map) = get_pkgs_info(&install_root) else{
+    }
+    if map.is_empty() {
         panic!("Failed to get info.");
-    };
+    }
 
     //Print info out
     for pkg in pkgs {
         //Get package description
-        let (mut ver, mut desc) = match get_pkg_info(&pkg, &map) {
-            Some(o) => o,
-            None => (String::from("n/a"), String::from("n/a")),
-        };
+        let (mut ver, mut desc) = map
+            .get(&pkg)
+            .cloned()
+            .map_or_else(|| (String::from("n/a"), String::from("n/a")), |o| o);
 
         //If user passed -v print version info, additionally if -d is passed print package
         //descriptions.
