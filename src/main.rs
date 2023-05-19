@@ -11,7 +11,7 @@
 //source: https://doc.rust-lang.org/cargo/commands/cargo-install.html
 
 use colored::Colorize;
-use std::{collections::HashMap, env, fs, io::Read};
+use std::{collections::HashMap, env, fs, io::Read, process::exit};
 
 fn determine_pkgs_install_dir() -> Vec<String> {
     //According to cargo documentation it's best to start looking for the Install Root Directory in
@@ -139,6 +139,7 @@ fn get_pkgs_info(ir: &str) -> Option<HashMap<String, (String, String)>> {
 struct Options {
     print_versions: bool,
     print_descs: bool,
+    print_paths: bool,
 }
 
 fn print_help() -> ! {
@@ -164,17 +165,20 @@ fn parse_args() -> Options {
     let mut op = Options {
         print_descs: false,
         print_versions: false,
+        print_paths: false,
     };
     for arg in &args {
         if arg == "-h" || arg == "--help" {
             print_help();
-        } else if arg == "-v" {
-            op.print_versions = true;
-        } else if arg == "-d" {
+        }
+        if arg.contains("d") {
             op.print_descs = true;
-        } else if arg == "-vd" || arg == "-dv" {
-            op.print_descs = true;
+        }
+        if arg.contains("v") {
             op.print_versions = true;
+        }
+        if arg.contains("p") {
+            op.print_paths = true;
         }
     }
     op
@@ -185,12 +189,19 @@ fn main() {
     let options = parse_args();
     let print_versions = options.print_versions;
     let print_descs = options.print_descs;
+    let print_paths = options.print_paths;
 
     //Locate packages
     let install_dirs = determine_pkgs_install_dir();
     if install_dirs.is_empty() {
         panic!("Failed to locate cargo root.");
     };
+    if print_paths {
+        for dir in install_dirs {
+            println!("{dir}");
+        }
+        exit(0);
+    }
 
     let mut pkgs: Vec<String> = Vec::new();
     let mut map: HashMap<String, (String, String)> = HashMap::new();
