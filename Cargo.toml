@@ -1,6 +1,6 @@
 [package]
 name = "cargo-ls-crates"
-version = "0.4.1"
+version = "0.4.2"
 edition = "2021"
 authors = ["bejker123 <1piotrkucharski@gmail.com>"]
 license = "MIT"
@@ -13,8 +13,8 @@ categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 #for using cargo flamegraph (https://github.com/flamegraph-rs/flamegraph)
-[profile.release]
-debug = true
+# [profile.release]
+# debug = true
 
 [dependencies]
 colored = "2.0.0"
