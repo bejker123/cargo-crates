@@ -136,7 +136,8 @@ fn get_pkgs_info(ir: &str) -> Option<HashMap<String, (String, String)>> {
     }
 }
 
-struct Options {
+#[derive(PartialEq, Debug)]
+struct CliOptions {
     print_versions: bool,
     print_descs: bool,
     print_paths: bool,
@@ -160,33 +161,28 @@ fn print_help() -> ! {
     std::process::exit(0)
 }
 
-fn parse_args() -> Options {
-    let args: Vec<String> = env::args().collect();
-    let mut op = Options {
+fn parse_args<T: ToString>(args: &[T]) -> CliOptions {
+    let mut op = CliOptions {
         print_descs: false,
         print_versions: false,
         print_paths: false,
     };
-    for arg in &args {
+    for arg in args {
+        let arg: String = arg.to_string();
         if arg == "-h" || arg == "--help" {
             print_help();
         }
-        if arg.contains("d") {
-            op.print_descs = true;
-        }
-        if arg.contains("v") {
-            op.print_versions = true;
-        }
-        if arg.contains("p") {
-            op.print_paths = true;
-        }
+        op.print_descs = arg.contains("d");
+        op.print_versions = arg.contains("v");
+        op.print_paths = arg.contains("p");
     }
     op
 }
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
     //Parse command line arguments
-    let options = parse_args();
+    let options = parse_args(&args);
     let print_versions = options.print_versions;
     let print_descs = options.print_descs;
     let print_paths = options.print_paths;
@@ -251,5 +247,80 @@ fn main() {
 
     if !(print_descs || print_versions) {
         println!();
+    }
+}
+
+mod test {
+    #[test]
+    fn determine_pkgs_install_dir() {
+        std::env::set_var("CARGO_INSTALL_ROOT", "tmp/CIR_PATH");
+        std::env::set_var("CARGO_HOME", "tmp/CH_PATH");
+        std::env::set_var("HOME", "tmp/H_PATH");
+        std::fs::create_dir("tmp/").unwrap();
+        std::fs::create_dir("tmp/CIR_PATH").unwrap();
+        std::fs::create_dir("tmp/CH_PATH").unwrap();
+        std::fs::create_dir_all("tmp/H_PATH/.cargo").unwrap();
+        let out = crate::determine_pkgs_install_dir();
+        assert_eq!(
+            out,
+            vec![
+                String::from("tmp/CIR_PATH"),
+                String::from("tmp/CH_PATH"),
+                String::from("tmp/H_PATH/.cargo")
+            ]
+        );
+        std::fs::remove_dir_all("tmp/").unwrap();
+    }
+
+    #[test]
+    fn parse_args() {
+        assert_eq!(
+            crate::parse_args(&["vdp"]),
+            crate::CliOptions {
+                print_versions: true,
+                print_descs: true,
+                print_paths: true
+            }
+        );
+        assert_eq!(
+            crate::parse_args(&["vd"]),
+            crate::CliOptions {
+                print_versions: true,
+                print_descs: true,
+                print_paths: false
+            }
+        );
+        assert_eq!(
+            crate::parse_args(&["dp"]),
+            crate::CliOptions {
+                print_versions: false,
+                print_descs: true,
+                print_paths: true
+            }
+        );
+        assert_eq!(
+            crate::parse_args(&["vp"]),
+            crate::CliOptions {
+                print_versions: true,
+                print_descs: false,
+                print_paths: true
+            }
+        );
+        assert_eq!(
+            crate::parse_args(&[""]),
+            crate::CliOptions {
+                print_versions: false,
+                print_descs: false,
+                print_paths: false
+            }
+        );
+        assert_eq!(
+            crate::parse_args(&["asfv"]),
+            crate::CliOptions {
+                print_versions: true,
+                print_descs: false,
+                print_paths: false
+            }
+        );
     }
 }
