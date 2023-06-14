@@ -168,13 +168,13 @@ fn parse_args<T: ToString>(args: &[T]) -> CliOptions {
         print_paths: false,
     };
     for arg in args {
-        let arg: String = arg.to_string();
+        let arg = arg.to_string();
         if arg == "-h" || arg == "--help" {
             print_help();
         }
-        op.print_descs = arg.contains("d");
-        op.print_versions = arg.contains("v");
-        op.print_paths = arg.contains("p");
+        op.print_descs = arg.contains('d');
+        op.print_versions = arg.contains('v');
+        op.print_paths = arg.contains('p');
     }
     op
 }
