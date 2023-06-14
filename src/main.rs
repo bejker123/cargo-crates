@@ -48,7 +48,7 @@ fn list_pkgs(ir: &str) -> Option<Vec<String>> {
         .filter_map(|x| x.ok()?.file_name().to_str().map(str::to_string))
         .collect();
 
-    //If the Vec is empty return None.
+    //This way it's easier to tell if the function failed.
     if names.is_empty() {
         None
     } else {
@@ -143,6 +143,17 @@ struct CliOptions {
     print_paths: bool,
 }
 
+impl CliOptions {
+    //Unpack the struct into a tuple which is easier with a dedicated function.
+    //Order:
+    // print_versions
+    // print_descs
+    // print_paths
+    pub fn unpack(&self) -> (bool, bool, bool) {
+        (self.print_versions, self.print_descs, self.print_paths)
+    }
+}
+
 fn print_help() -> ! {
     println!("Usage:");
     let options = "OPTIONS".yellow().bold();
@@ -161,6 +172,7 @@ fn print_help() -> ! {
     std::process::exit(0)
 }
 
+//Accept an argument rather than get the cli args from the api to enable testing.
 fn parse_args<T: ToString>(args: &[T]) -> CliOptions {
     let mut op = CliOptions {
         print_descs: false,
@@ -183,9 +195,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     //Parse command line arguments
     let options = parse_args(&args);
-    let print_versions = options.print_versions;
-    let print_descs = options.print_descs;
-    let print_paths = options.print_paths;
+    let (print_versions, print_descs, print_paths) = options.unpack();
 
     //Locate packages
     let install_dirs = determine_pkgs_install_dir();
