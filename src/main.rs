@@ -230,12 +230,15 @@ fn main() {
     }
 
     //Print info out
-    for pkg in pkgs {
+    for mut pkg in pkgs {
         //Get package description
         let (mut ver, mut desc) = map
             .get(&pkg)
             .cloned()
             .map_or_else(|| (String::from("n/a"), String::from("n/a")), |o| o);
+        if let Some(i) = pkg.find(".exe") {
+            pkg = pkg[..i].to_owned()
+        }
 
         //If user passed -v print version info, additionally if -d is passed print package
         //descriptions.
