@@ -179,7 +179,7 @@ fn parse_args<T: ToString>(args: &[T]) -> CliOptions {
         print_versions: false,
         print_paths: false,
     };
-    for arg in args {
+    for arg in args.into_iter().skip(1) {
         let arg = arg.to_string();
         if arg == "-h" || arg == "--help" {
             print_help();
